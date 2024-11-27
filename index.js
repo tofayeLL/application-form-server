@@ -171,6 +171,37 @@ async function run() {
 
 
 
+         // Post for login   user in database
+         app.post('/loginUser', async (req, res) => {
+            const { userEmail, password, number } = req.body;
+        
+            try {
+                // Query to find a user with matching email, password, and number
+                const query = { userEmail, password, number };
+                const userExists = await userCollection.findOne(query);
+        
+                if (userExists) {
+                    // If user exists, send success response
+                    return res.send({
+                        success: true,
+                        message: 'Login successful! Redirecting to dashboard.',
+                    });
+                } else {
+                    // If credentials do not match
+                    return res.send({
+                        success: false,
+                        message: 'Invalid login credentials. Please check and try again.',
+                    });
+                }
+            } catch (error) {
+                console.error('Error during login:', error.message);
+                res.status(500).send({ message: 'Internal Server Error. Please try again later.' });
+            }
+        });
+        
+
+
+
 
 
 
