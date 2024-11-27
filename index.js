@@ -76,7 +76,7 @@ async function run() {
 
 
 
-
+        //POST API
         app.post('/applicantCollection', async (req, res) => {
             const newUser = req.body;
             const { email, cp_number } = newUser;
@@ -97,9 +97,23 @@ async function run() {
                     return res.send({ message: 'Phone number already exists', insertedId: null });
                 }
 
-                // Insert new user if validation passes
+                // Get the highest app_id from the database to calculate the next app_id
+                const lastApplicant = await applicantCollection.find().sort({ app_id: -1 }).limit(1).toArray(); // Sort by app_id descending
+                const lastAppId = lastApplicant.length > 0 ? lastApplicant[0].app_id : 23999999; // Start with 24000000 for the first user
+
+                // Increment app_id by 1 for the new user
+                const nextAppId = lastAppId + 1;
+                newUser.app_id = nextAppId;
+
+                // Insert the new user into the database
                 const result = await applicantCollection.insertOne(newUser);
-                res.send({ message: 'Application submitted successfully!', insertedId: result.insertedId });
+
+                // Send success response with insertedId and app_id
+                res.send({
+                    message: 'Application submitted successfully!',
+                    insertedId: result.insertedId,
+                    app_id: newUser.app_id
+                });
             } catch (error) {
                 console.error('Error inserting user:', error.message);
                 res.status(500).send({ message: 'Internal Server Error. Please try again later.' });
@@ -110,7 +124,7 @@ async function run() {
 
 
 
-       
+
         // Post for Insert user info in database
         app.post('/userInfo', async (req, res) => {
             const newUser = req.body;
