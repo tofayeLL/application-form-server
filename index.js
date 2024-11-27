@@ -49,7 +49,7 @@ async function run() {
 
 
         //POST API
-        app.post('/applicantCollection', async (req, res) => {
+        /* app.post('/applicantCollection', async (req, res) => {
             const newUser = req.body;
             // const query = { email: newUser.email }
 
@@ -72,42 +72,92 @@ async function run() {
             // console.log('added user', result);
             res.json(result);
 
-        });
+        }); */
 
 
 
-        // post for Insert user info in database
-        app.post('/userInfo', async (req, res) => {
+
+        app.post('/applicantCollection', async (req, res) => {
             const newUser = req.body;
-            const { userEmail, number } = newUser; // Destructure userEmail and number
-        
+            const { email, cp_number } = newUser;
+
             try {
-                // Check if email or phone number already exists in the database
-                const emailQuery = { userEmail: userEmail };
-                const phoneQuery = { number: number };
-        
-                const emailExists = await userCollection.findOne(emailQuery);
-                const phoneExists = await userCollection.findOne(phoneQuery);
-        
+
+                const emailQuery = { email: email };
+                const phoneQuery = { cp_number: cp_number };
+
+                const emailExists = await applicantCollection.findOne(emailQuery);
+                const phoneExists = await applicantCollection.findOne(phoneQuery);
+
                 if (emailExists) {
-                    return res.send({ message: 'Email already exists! Please use another email.', insertedId: null });
+                    return res.send({ message: 'Email already exists', insertedId: null });
                 }
-        
+
                 if (phoneExists) {
-                    return res.send({ message: 'Phone number already exists! Please use a new phone number.', insertedId: null });
+                    return res.send({ message: 'Phone number already exists', insertedId: null });
                 }
-        
-                // If both email and phone number are unique, insert the new user
-                const result = await userCollection.insertOne(newUser);
-        
-                // Send success response with insertedId
-                res.send({ message: 'User added successfully!', insertedId: result.insertedId });
+
+                // Insert new user if validation passes
+                const result = await applicantCollection.insertOne(newUser);
+                res.send({ message: 'Application submitted successfully!', insertedId: result.insertedId });
             } catch (error) {
                 console.error('Error inserting user:', error.message);
                 res.status(500).send({ message: 'Internal Server Error. Please try again later.' });
             }
         });
-        
+
+
+
+
+
+       
+        // Post for Insert user info in database
+        app.post('/userInfo', async (req, res) => {
+            const newUser = req.body;
+            const { userEmail, number } = newUser; // Destructure userEmail and number
+
+            try {
+                // Check if email or phone number already exists in the database
+                const emailQuery = { userEmail: userEmail };
+                const phoneQuery = { number: number };
+
+                const emailExists = await userCollection.findOne(emailQuery);
+                const phoneExists = await userCollection.findOne(phoneQuery);
+
+                if (emailExists) {
+                    return res.send({ message: 'Email already exists! Please use another email.', insertedId: null });
+                }
+
+                if (phoneExists) {
+                    return res.send({ message: 'Phone number already exists! Please use a new phone number.', insertedId: null });
+                }
+
+                // Get the highest app_id from the database to calculate the next app_id
+                const lastUser = await userCollection.find().sort({ app_id: -1 }).limit(1).toArray(); // Sort by app_id descending
+                const lastAppId = lastUser.length > 0 ? lastUser[0].app_id : 23999999; // Start with 24000000 for the first user
+
+                // Increment app_id by 1 for the new user
+                const nextAppId = lastAppId + 1;
+                newUser.app_id = nextAppId;
+
+                // Insert the new user into the database
+                const result = await userCollection.insertOne(newUser);
+
+                // Send success response with insertedId and app_id
+                res.send({
+                    message: 'User added successfully!',
+                    insertedId: result.insertedId,
+                    app_id: newUser.app_id
+                });
+            } catch (error) {
+                console.error('Error inserting user:', error.message);
+                res.status(500).send({ message: 'Internal Server Error. Please try again later.' });
+            }
+        });
+
+
+
+
 
 
 
