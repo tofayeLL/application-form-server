@@ -171,6 +171,30 @@ async function run() {
 
 
 
+        //  get individual user
+        app.get('/user/:userEmail', async (req, res) => {
+            const userEmail = req.params.userEmail;
+            console.log('Received userEmail:', userEmail);
+        
+            try {
+                // Query the database
+                const query = { userEmail: userEmail }; // Case-sensitive query
+                const user = await userCollection.findOne(query);
+        
+                if (user) {
+                    res.status(200).send(user); // Send the user document as a response
+                } else {
+                    res.status(404).send({ message: 'User not found' }); // No match
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error.message);
+                res.status(500).send({ message: 'Internal server error' }); // Catch errors
+            }
+        });
+        
+
+
+
          // Post for login   user in database
          app.post('/loginUser', async (req, res) => {
             const { userEmail, password, number } = req.body;
@@ -184,13 +208,13 @@ async function run() {
                     // If user exists, send success response
                     return res.send({
                         success: true,
-                        message: 'Login successful! Redirecting to dashboard.',
+                        message: 'Login successful!',
                     });
                 } else {
                     // If credentials do not match
                     return res.send({
                         success: false,
-                        message: 'Invalid login credentials. Please check and try again.',
+                        message: 'Invalid login credentials (email or number or password). Please check and try again.',
                     });
                 }
             } catch (error) {
@@ -198,6 +222,11 @@ async function run() {
                 res.status(500).send({ message: 'Internal Server Error. Please try again later.' });
             }
         });
+
+
+        //get Individual user info
+      
+        
         
 
 
