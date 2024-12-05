@@ -80,10 +80,20 @@ async function run() {
         app.post('/applicantCollection', async (req, res) => {
             const newUser = req.body;
             const { email, cp_number } = newUser;
+            console.log(email);
+            // Validation: Check if email and cp_number are provided
+            if (!email) {
+                return res.status(400).send({ message: 'Email is required', insertedId: null });
+            }
+
+            if (!cp_number) {
+                return res.status(400).send({ message: 'Phone number is required', insertedId: null });
+            }
 
             try {
 
                 const emailQuery = { email: email };
+
                 const phoneQuery = { cp_number: cp_number };
 
                 const emailExists = await applicantCollection.findOne(emailQuery);
@@ -171,16 +181,17 @@ async function run() {
 
 
 
+
         //  get individual user
         app.get('/user/:userEmail', async (req, res) => {
             const userEmail = req.params.userEmail;
             console.log('Received userEmail:', userEmail);
-        
+
             try {
                 // Query the database
                 const query = { userEmail: userEmail }; // Case-sensitive query
                 const user = await userCollection.findOne(query);
-        
+
                 if (user) {
                     res.status(200).send(user); // Send the user document as a response
                 } else {
@@ -191,19 +202,20 @@ async function run() {
                 res.status(500).send({ message: 'Internal server error' }); // Catch errors
             }
         });
-        
 
 
 
-         // Post for login   user in database
-         app.post('/loginUser', async (req, res) => {
+
+
+        // Post for login   user in database
+        app.post('/loginUser', async (req, res) => {
             const { userEmail, password, number } = req.body;
-        
+
             try {
                 // Query to find a user with matching email, password, and number
                 const query = { userEmail, password, number };
                 const userExists = await userCollection.findOne(query);
-        
+
                 if (userExists) {
                     // If user exists, send success response
                     return res.send({
@@ -223,11 +235,6 @@ async function run() {
             }
         });
 
-
-        //get Individual user info
-      
-        
-        
 
 
 
