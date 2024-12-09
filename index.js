@@ -33,6 +33,7 @@ async function run() {
         // collection
         const applicantCollection = client.db("application").collection("applicants");
         const userCollection = client.db("application").collection("users");
+        const adminCollection = client.db("application").collection("adminAnza");
 
 
         //GET API
@@ -226,7 +227,39 @@ async function run() {
                     // If credentials do not match
                     return res.send({
                         success: false,
-                        message: 'Invalid login credentials (email or number or password). Please check and try again.',
+                        message: 'Invalid login credentials information(email or number or password). Please check and try again.',
+                    });
+                }
+            } catch (error) {
+                console.error('Error during login:', error.message);
+                res.status(500).send({ message: 'Internal Server Error. Please try again later.' });
+            }
+        });
+
+
+
+
+        // for admin login 
+        app.post('/adminLogin', async (req, res) => {
+            const { userEmail, password } = req.body;
+            console.log("from admin login", userEmail, password)
+
+            try {
+                // Query to find admin with matching email, password, and number
+                const query = { userEmail, password };
+                const userExists = await adminCollection.findOne(query);
+
+                if (userExists) {
+                    // If admin exists, send success response
+                    return res.send({
+                        success: true,
+                        message: 'Login successful!',
+                    });
+                } else {
+                    // If credentials do not match
+                    return res.send({
+                        success: false,
+                        message: 'Invalid login credentials information(email or password). Please check and try again.',
                     });
                 }
             } catch (error) {
