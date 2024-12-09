@@ -241,19 +241,27 @@ async function run() {
 
         // for admin login 
         app.post('/adminLogin', async (req, res) => {
-            const { userEmail, password } = req.body;
-            console.log("from admin login", userEmail, password)
+            const { adminEmail, password } = req.body;
+            // console.log("from admin login", adminEmail, password);
+
+            // Check if adminEmail or password is undefined
+            if (!adminEmail || !password) {
+                return res.status(400).send({
+                    success: false,
+                    message: 'Email or password cannot be empty. Please provide valid credentials.',
+                });
+            }
 
             try {
                 // Query to find admin with matching email, password, and number
-                const query = { userEmail, password };
+                const query = { adminEmail, password };
                 const userExists = await adminCollection.findOne(query);
 
                 if (userExists) {
                     // If admin exists, send success response
                     return res.send({
                         success: true,
-                        message: 'Login successful!',
+                        message: 'Admin Login successful!',
                     });
                 } else {
                     // If credentials do not match
