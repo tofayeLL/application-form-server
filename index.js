@@ -280,6 +280,109 @@ async function run() {
 
 
 
+        // by use get All applicants find
+        app.get('/applicants', async (req, res) => {
+            const result = await applicantCollection.find().toArray();
+            res.send(result);
+        })
+
+
+        /* date wise applicant table create get method to get date count for applicant */
+        app.get('/dateWiseApplicants', async (req, res) => {
+            try {
+                const result = await applicantCollection.aggregate([
+                    {
+                        // Match applicants that have a valid 'date' field
+                        $match: {
+                            date: { $ne: null, $exists: true } // Exclude applicants without a 'date' field or with null date
+                        }
+                    },
+                    {
+                        // Ensure 'date' is a valid Date object
+                        $addFields: {
+                            date: { $toDate: "$date" }
+                        }
+                    },
+                    {
+                        // Group by date and count the applicants
+                        $group: {
+                            _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } }, // Group by formatted date
+                            dateCount: { $sum: 1 }, // Count the applicants
+                            applicants: { $push: "$$ROOT" } // Push the entire applicant data into an array
+                        }
+                    },
+                    {
+                        // Sort by date
+                        $sort: { _id: 1 }
+                    },
+                    {
+                        // Project the final result
+                        $project: {
+                            _id: 1, // Exclude _id field from the output
+                            date: "$_id", // Rename _id to 'date'
+                            dateCount: 1, // Include dateCount field
+                            applicants: 1 // Include applicants for the given date
+                        }
+                    }
+                ]).toArray();
+
+                res.send(result);
+            } catch (err) {
+                console.error("Aggregation error: ", err);
+                res.status(500).send({ error: "Failed to fetch data", details: err.message });
+            }
+        });
+
+
+
+        // Search applicant id and phone number from application collection
+        app.get('/search', async (req, res) => {
+            const query = req.query.q; // Get query parameter (app_id or cp_number)
+
+            console.log("Query:", query, "Type:", typeof query);
+
+            if (!query) {
+                return res.status(400).json({ error: 'Query parameter (q) is required' });
+            }
+
+            try {
+                // Attempt to convert the query to a number (if it's numeric)
+                const numericQuery = !isNaN(query) ? Number(query) : null;
+
+                // Query the database
+                const result = await applicantCollection.findOne({
+                    $or: [
+                        { app_id: numericQuery },       // Match `app_id` as a number
+                        { app_id: query },             // Match `app_id` as a string
+                        { cp_number: query }           // Match `cp_number` (always string)
+                    ]
+                });
+
+                if (result) {
+                    res.status(200).json(result);
+                } else {
+                    res.status(404).json({ message: 'No applicant found' });
+                }
+            } catch (error) {
+                console.error('Search Error:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
