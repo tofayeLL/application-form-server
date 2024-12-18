@@ -185,13 +185,13 @@ async function run() {
 
         //  get individual user
         app.get('/user/:userEmail', async (req, res) => {
-            const userEmail = req.params.userEmail;
-            console.log('Received userEmail:', userEmail);
+            const email = req.params.userEmail;
+            console.log('Received userEmail:', email);
 
             try {
                 // Query the database
-                const query = { userEmail: userEmail }; // Case-sensitive query
-                const user = await userCollection.findOne(query);
+                const query = { email: email }; // Case-sensitive query
+                const user = await applicantCollection.findOne(query);
 
                 if (user) {
                     res.status(200).send(user); // Send the user document as a response
@@ -210,12 +210,12 @@ async function run() {
 
         // Post for login   user in database
         app.post('/loginUser', async (req, res) => {
-            const { userEmail, password, number } = req.body;
+            const { email, password, cp_number } = req.body;
 
             try {
                 // Query to find a user with matching email, password, and number
-                const query = { userEmail, password, number };
-                const userExists = await userCollection.findOne(query);
+                const query = { email, password, cp_number };
+                const userExists = await applicantCollection.findOne(query);
 
                 if (userExists) {
                     // If user exists, send success response
