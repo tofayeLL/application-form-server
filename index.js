@@ -369,6 +369,69 @@ async function run() {
             }
         });
 
+        // Get method to find a single applicant by ID
+        app.get('/singleApplicant/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id: new ObjectId(id) };
+
+            try {
+                // Find the applicant using the query
+                const result = await applicantCollection.findOne(query);
+
+                if (!result) {
+                    // If no applicant is found, return a 404 error
+                    return res.status(404).send({ message: 'Applicant not found' });
+                }
+
+                // Send the found applicant data
+                res.send(result);
+            } catch (error) {
+                // Handle any errors that occur during the database operation
+                console.error('Error fetching applicant:', error);
+                res.status(500).send({ message: 'Server error' });
+            }
+        });
+
+
+
+
+        // update applicant info by using patch
+        app.patch('/updateApplicant/:id', async (req, res) => {
+            const { id } = req.params;
+            const updatedFields = req.body;
+            console.log(updatedFields);
+
+            // Ensure images are handled correctly
+            if (updatedFields.images) {
+                // If images are present in the request, remove any undefined values
+                if (!updatedFields.images.image1) {
+                    delete updatedFields.images.image1;
+                }
+                if (!updatedFields.images.image2) {
+                    delete updatedFields.images.image2;
+                }
+            }
+
+            try {
+                const result = await applicantCollection.updateOne(
+                    { _id: new ObjectId(id) }, // Match the document by ID
+                    { $set: updatedFields } // Update only the provided fields
+                );
+
+                if (result.modifiedCount > 0) {
+                    res.status(200).json({ message: 'Update successful' });
+                } else {
+                    res.status(404).json({ message: 'Applicant not found or no changes made' });
+                }
+            } catch (error) {
+                console.error('Error updating applicant:', error);
+                res.status(500).json({ message: 'An error occurred' });
+            }
+        });
+
+
+
 
 
 
