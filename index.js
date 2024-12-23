@@ -286,6 +286,17 @@ async function run() {
             res.send(result);
         })
 
+        // by using get method to get computer operator APplicant data between all applicants find with postName filter
+        app.get('/computerOperator', async (req, res) => {
+            try {
+                const result = await applicantCollection.find({ postName: "Computer Operator" }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send({ message: "An error occurred while fetching applicants." });
+            }
+        });
+
 
         /* date wise applicant table create get method to get date count for applicant */
         app.get('/dateWiseApplicants', async (req, res) => {
@@ -422,23 +433,23 @@ async function run() {
 
 
 
-         // update applicant image by using patch
-         app.patch('/updateApplicantImage/:id', async (req, res) => {
+        // update applicant image and signature by using patch
+        app.patch('/updateApplicantImage/:id', async (req, res) => {
             const { id } = req.params;
             const updatedFields = req.body; // The fields to update from the request body
-        
+
             console.log(updatedFields);
-        
+
             try {
                 // Find the applicant document
                 const applicant = await applicantCollection.findOne({ _id: new ObjectId(id) });
                 if (!applicant) {
                     return res.status(404).json({ message: 'Applicant not found' });
                 }
-        
+
                 // Construct the update object
                 let updateObj = {};
-        
+
                 // Only update fields that are present in the request body
                 if (updatedFields.images && updatedFields.images.image1) {
                     updateObj['images.image1'] = updatedFields.images.image1;
@@ -449,13 +460,13 @@ async function run() {
                 if (updatedFields.date) {
                     updateObj['date'] = updatedFields.date;
                 }
-        
+
                 // Update the applicant data in the database
                 const result = await applicantCollection.updateOne(
                     { _id: new ObjectId(id) }, // Match the document by ID
                     { $set: updateObj } // Update only the specified fields
                 );
-        
+
                 if (result.modifiedCount > 0) {
                     res.status(200).json({ message: 'Update successful' });
                 } else {
@@ -466,7 +477,7 @@ async function run() {
                 res.status(500).json({ message: 'An error occurred' });
             }
         });
-        
+
 
 
 
