@@ -372,7 +372,7 @@ async function run() {
         // Get method to find a single applicant by ID
         app.get('/singleApplicant/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
+            console.log(id)
             const query = { _id: new ObjectId(id) };
 
             try {
@@ -402,17 +402,6 @@ async function run() {
             const updatedFields = req.body;
             console.log(updatedFields);
 
-            // Ensure images are handled correctly
-            if (updatedFields.images) {
-                // If images are present in the request, remove any undefined values
-                if (!updatedFields.images.image1) {
-                    delete updatedFields.images.image1;
-                }
-                if (!updatedFields.images.image2) {
-                    delete updatedFields.images.image2;
-                }
-            }
-
             try {
                 const result = await applicantCollection.updateOne(
                     { _id: new ObjectId(id) }, // Match the document by ID
@@ -429,6 +418,55 @@ async function run() {
                 res.status(500).json({ message: 'An error occurred' });
             }
         });
+
+
+
+
+         // update applicant image by using patch
+         app.patch('/updateApplicantImage/:id', async (req, res) => {
+            const { id } = req.params;
+            const updatedFields = req.body; // The fields to update from the request body
+        
+            console.log(updatedFields);
+        
+            try {
+                // Find the applicant document
+                const applicant = await applicantCollection.findOne({ _id: new ObjectId(id) });
+                if (!applicant) {
+                    return res.status(404).json({ message: 'Applicant not found' });
+                }
+        
+                // Construct the update object
+                let updateObj = {};
+        
+                // Only update fields that are present in the request body
+                if (updatedFields.images && updatedFields.images.image1) {
+                    updateObj['images.image1'] = updatedFields.images.image1;
+                }
+                if (updatedFields.images && updatedFields.images.image2) {
+                    updateObj['images.image2'] = updatedFields.images.image2;
+                }
+                if (updatedFields.date) {
+                    updateObj['date'] = updatedFields.date;
+                }
+        
+                // Update the applicant data in the database
+                const result = await applicantCollection.updateOne(
+                    { _id: new ObjectId(id) }, // Match the document by ID
+                    { $set: updateObj } // Update only the specified fields
+                );
+        
+                if (result.modifiedCount > 0) {
+                    res.status(200).json({ message: 'Update successful' });
+                } else {
+                    res.status(404).json({ message: 'No changes made' });
+                }
+            } catch (error) {
+                console.error('Error updating applicant:', error);
+                res.status(500).json({ message: 'An error occurred' });
+            }
+        });
+        
 
 
 
