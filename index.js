@@ -298,6 +298,18 @@ async function run() {
         });
 
 
+        // by using get method to get unpaid applicant data between all applicants find with postName filter
+        app.get('/unpaid', async (req, res) => {
+            try {
+                const result = await applicantCollection.find({ status: "Unpaid" }).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send({ message: "An error occurred while fetching applicants." });
+            }
+        });
+
+
         /* date wise applicant table create get method to get date count for applicant */
         app.get('/dateWiseApplicants', async (req, res) => {
             try {
