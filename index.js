@@ -4,13 +4,21 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
+const axios = require("axios");
+const bodyParser = require("body-parser");
 const port = process.env.PORT || 5000;
 
 
 
 // middleware
-app.use(cors());
+app.use(cors(
+    {
+        origin: 'http://localhost:3000',
+        Credential: true
+    }
+));
 app.use(express.json());
+app.use(bodyParser.json());
 
 
 
@@ -80,6 +88,7 @@ async function run() {
         //POST API
         app.post('/applicantCollection', async (req, res) => {
             const newUser = req.body;
+            console.log(newUser)
             const { email, cp_number } = newUser;
             console.log(email);
             // Validation: Check if email and cp_number are provided
@@ -275,6 +284,16 @@ async function run() {
                 res.status(500).send({ message: 'Internal Server Error. Please try again later.' });
             }
         });
+
+
+
+
+
+        // bekash payent
+        app.post('/bkash/payment/create', async (req, res) => {
+
+
+        })
 
 
 
