@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const axios = require("axios");
+const globals = require('node-global-storage');
 const bodyParser = require("body-parser");
 const port = process.env.PORT || 5000;
 
@@ -34,6 +35,46 @@ const client = new MongoClient(uri, {
     }
 });
 
+
+
+// Middleware to get bKash token
+const getBkashToken = async (req, res, next) => {
+    globals.unsetValue('id_token');
+    try {
+        const { data } = await axios.post(process.env.bkash_grant_token_url, {
+            app_key: process.env.BKASH_APP_KEY,
+            app_secret: process.env.BKASH_APP_SECRET,
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                username: process.env.BKASH_USERNAME,
+                password: process.env.BKASH_PASSWORD,
+            }
+        })
+
+        console.log(data);
+
+        // globals.setValue('id_token', data.id_token, { protected: true })
+
+        // next()
+    } catch (error) {
+        return res.status(401).json({ error: error.message })
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function run() {
     try {
         // collection
@@ -41,6 +82,14 @@ async function run() {
         const userCollection = client.db("application").collection("users");
         const adminCollection = client.db("application").collection("adminAnza");
 
+
+
+
+        // bekash payent
+        app.post('/bkash/payment/create', getBkashToken, async (req, res) => {
+            console.log("Received request:", req.body);
+            res.json({ success: true, message: "Payment request received" });
+        });
 
         //GET API
         app.get('/applicantCollection', async (req, res) => {
@@ -287,11 +336,6 @@ async function run() {
 
 
 
-        // bekash payent
-        app.post('/bkash/payment/create', async (req, res) => {
-            console.log("Received request:", req.body);
-            res.json({ success: true, message: "Payment request received" });
-        });
 
 
 
