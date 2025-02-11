@@ -86,12 +86,9 @@ async function run() {
 
 
 
-        // bekash payent
+        // bekash payment 
         app.post('/bkash/payment/create', getBkashToken, async (req, res) => {
             // console.log("Received request:", req.body);
-
-
-
             const { amount, userId } = req.body;
             globals.setValue('userId', userId)
             try {
@@ -119,13 +116,26 @@ async function run() {
                 return res.status(401).json({ error: error.message })
             }
 
-
-
-
-
-
             // res.json({ success: true, message: "Payment request received" });
         });
+
+
+
+        // bkash payment call back
+        app.post('/bkash/payment/callback', getBkashToken, async (req, res) => {
+            // console.log("Received request:", req.body);
+            const { paymentID, status } = req.query;
+
+           
+        });
+
+
+
+
+
+
+
+
 
         //GET API
         app.get('/applicantCollection', async (req, res) => {
