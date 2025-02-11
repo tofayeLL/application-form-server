@@ -11,12 +11,10 @@ const port = process.env.PORT || 5000;
 
 
 // middleware
-app.use(cors(
-    {
-        origin: 'http://localhost:3000',
-        Credential: true
-    }
-));
+app.use(cors({
+    origin: 'http://localhost:3000',  // React frontend URL
+    credentials: true                 // Allow credentials (cookies, authentication headers)
+}));
 app.use(express.json());
 app.use(bodyParser.json());
 
@@ -291,9 +289,9 @@ async function run() {
 
         // bekash payent
         app.post('/bkash/payment/create', async (req, res) => {
-
-
-        })
+            console.log("Received request:", req.body);
+            res.json({ success: true, message: "Payment request received" });
+        });
 
 
 
