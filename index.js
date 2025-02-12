@@ -91,7 +91,7 @@ async function run() {
         // bekash payment 
         app.post('/bkash/payment/create', getBkashToken, async (req, res) => {
             // console.log("Received request:", req.body);
-            const { amount, userId } = req.body;
+            const { amount, userId, applicantId } = req.body;
             globals.setValue('userId', userId)
             try {
                 const { data } = await axios.post(process.env.bkash_create_payment_url, {
@@ -123,10 +123,10 @@ async function run() {
 
 
 
-        // bkash payment call back
+        // bkash payment call back and store in the datanase after successfull
         app.get('/bkash/payment/callback', getBkashToken, async (req, res) => {
             // console.log("Received request:", req.body);
-            const { paymentID, status } = req.query;
+            const { paymentID, status, applicantId } = req.query;
 
             console.log(req.query);
 
@@ -150,24 +150,25 @@ async function run() {
 
                     if (data && data.statusCode === "0000") {
                         // Prepare the payment document based on your Mongoose schema
-                       /*  const paymentDocument = {
-                            userId: Math.floor(Math.random() * 10) + 1, // Replace with actual user ID
-                            paymentID: data.paymentID,
-                            payerReference: data.payerReference,
-                            customerMsisdn: data.customerMsisdn,
-                            trxID: data.trxID,
-                            amount: parseFloat(data.amount), // Ensure stored as a number
-                            transactionStatus: data.transactionStatus,
-                            paymentExecuteTime: data.paymentExecuteTime,
-                            currency: data.currency,
-                            intent: data.intent,
-                            merchantInvoiceNumber: data.merchantInvoiceNumber,
-                            createdAt: new Date(), // Equivalent to timestamps: true
-                            updatedAt: new Date(),
-                        }; */
-        
+                        /*  const paymentDocument = {
+                             userId: Math.floor(Math.random() * 10) + 1, // Replace with actual user ID
+                             paymentID: data.paymentID,
+                             payerReference: data.payerReference,
+                             customerMsisdn: data.customerMsisdn,
+                             trxID: data.trxID,
+                             amount: parseFloat(data.amount), // Ensure stored as a number
+                             transactionStatus: data.transactionStatus,
+                             paymentExecuteTime: data.paymentExecuteTime,
+                             currency: data.currency,
+                             intent: data.intent,
+                             merchantInvoiceNumber: data.merchantInvoiceNumber,
+                             createdAt: new Date(), // Equivalent to timestamps: true
+                             updatedAt: new Date(),
+                         }; */
+
                         const paymentDocument = {
-                            userId: Math.floor(Math.random() * 10) + 1, // Replace with actual user ID
+                            userId: Math.random() * 10 + 1, // Replace with actual user ID
+                            applicantId: applicantId,
                             amount: parseInt(data.amount),
                             trxID: data.trxID,
                             paymentID,
@@ -196,6 +197,59 @@ async function run() {
 
 
         });
+
+
+
+
+        // refund bkash payment
+        app.get('/bkash/payment/refund/:trxID', getBkashToken, async (req, res) => {
+
+            const { trxID } = req.params;
+
+            try {
+                // Find the payment document based on the trxID
+                const payment = await paymentsCollection.findOne({ trxID });
+
+                if (!payment) {
+                    return res.status(404).json({ error: "Payment not found" });
+                }
+
+                // Prepare the refund data for bKash
+                const refundData = {
+                    paymentID: payment.paymentID,
+                    amount: payment.amount,
+                    trxID,
+                    sku: "payment",
+                    reason: "cashback", // Example reason
+                };
+
+                // Call the bKash API to process the refund
+                const { data } = await axios.post(
+                    process.env.bkash_refund_transaction_url,
+                    refundData,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                            Authorization: globals.getValue('id_token'),
+                            'x-app-key': process.env.BKASH_APP_KEY,
+                        } // Use the same header function you had in your Mongoose version
+                    }
+                );
+
+                // Check if the refund is successful based on bKash response
+                if (data && data.statusCode === "0000") {
+                    return res.status(200).json({ message: "Refund successful" });
+                } else {
+                    return res.status(404).json({ error: "Refund failed" });
+                }
+            } catch (error) {
+                console.error("Error processing refund:", error);
+                return res.status(500).json({ error: "Refund processing error" });
+            } 
+
+        });
+
 
 
 
