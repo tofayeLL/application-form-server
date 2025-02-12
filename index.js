@@ -82,6 +82,8 @@ async function run() {
         const applicantCollection = client.db("application").collection("applicants");
         const userCollection = client.db("application").collection("users");
         const adminCollection = client.db("application").collection("adminAnza");
+        const paymentsCollection = client.db("application").collection("payments");
+
 
 
 
@@ -128,9 +130,71 @@ async function run() {
 
             console.log(req.query);
 
-            /* if (status === 'cancel' || status === 'failure') {
-                return res.redirect(`http://localhost:5173/error?message=${status}`)
-            } */
+            if (status === 'cancel' || status === 'failure') {
+                return res.redirect(`http://localhost:3000/error?message=${status}`)
+            }
+
+
+
+            if (status === 'success') {
+                try {
+                    const { data } = await axios.post(process.env.bkash_execute_payment_url, { paymentID }, {
+
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                            Authorization: globals.getValue('id_token'),
+                            'x-app-key': process.env.BKASH_APP_KEY,
+                        }
+                    })
+
+                    if (data && data.statusCode === "0000") {
+                        // Prepare the payment document based on your Mongoose schema
+                       /*  const paymentDocument = {
+                            userId: Math.floor(Math.random() * 10) + 1, // Replace with actual user ID
+                            paymentID: data.paymentID,
+                            payerReference: data.payerReference,
+                            customerMsisdn: data.customerMsisdn,
+                            trxID: data.trxID,
+                            amount: parseFloat(data.amount), // Ensure stored as a number
+                            transactionStatus: data.transactionStatus,
+                            paymentExecuteTime: data.paymentExecuteTime,
+                            currency: data.currency,
+                            intent: data.intent,
+                            merchantInvoiceNumber: data.merchantInvoiceNumber,
+                            createdAt: new Date(), // Equivalent to timestamps: true
+                            updatedAt: new Date(),
+                        }; */
+        
+                        const paymentDocument = {
+                            userId: Math.floor(Math.random() * 10) + 1, // Replace with actual user ID
+                            amount: parseInt(data.amount),
+                            trxID: data.trxID,
+                            paymentID,
+                            date: data.paymentExecuteTime, // Keep as string, as per your schema
+                            createdAt: new Date(), // MongoDB equivalent of timestamps: true
+                            updatedAt: new Date(),
+                        };
+
+                        // Insert into MongoDB
+                        await paymentsCollection.insertOne(paymentDocument);
+
+                        return res.redirect(`http://localhost:3000/success`);
+                    }
+
+
+                    else {
+                        return res.redirect(`http://localhost:3000/error?message=${data.statusMessage}`)
+                    }
+                } catch (error) {
+                    console.log(error)
+                    return res.redirect(`http://localhost:3000/error?message=${error.message}`)
+                }
+            }
+
+
+
+
         });
 
 
