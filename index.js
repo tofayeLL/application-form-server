@@ -92,12 +92,14 @@ async function run() {
         app.post('/bkash/payment/create', getBkashToken, async (req, res) => {
             // console.log("Received request:", req.body);
             const { amount, userId, applicantId } = req.body;
+            // console.log("create", applicantId)
             globals.setValue('userId', userId)
             try {
                 const { data } = await axios.post(process.env.bkash_create_payment_url, {
                     mode: '0011',
                     payerReference: " ",
-                    callbackURL: 'http://localhost:5000/bkash/payment/callback',
+                    // callbackURL: 'http://localhost:5000/bkash/payment/callback',
+                    callbackURL: `http://localhost:5000/bkash/payment/callback?applicantId=${applicantId}`,  // Include applicantId here
                     amount: amount,
                     currency: "BDT",
                     intent: 'sale',
@@ -127,6 +129,7 @@ async function run() {
         app.get('/bkash/payment/callback', getBkashToken, async (req, res) => {
             // console.log("Received request:", req.body);
             const { paymentID, status, applicantId } = req.query;
+            // console.log("callback", applicantId)
 
             console.log(req.query);
 
@@ -168,7 +171,7 @@ async function run() {
 
                         const paymentDocument = {
                             userId: Math.random() * 10 + 1, // Replace with actual user ID
-                            applicantId: applicantId,
+                            applicantId: parseInt(applicantId),
                             amount: parseInt(data.amount),
                             trxID: data.trxID,
                             paymentID,
@@ -246,7 +249,7 @@ async function run() {
             } catch (error) {
                 console.error("Error processing refund:", error);
                 return res.status(500).json({ error: "Refund processing error" });
-            } 
+            }
 
         });
 
