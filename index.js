@@ -95,7 +95,7 @@ async function run() {
                 const { data } = await axios.post(process.env.bkash_create_payment_url, {
                     mode: '0011',
                     payerReference: " ",
-                    callbackURL: 'http://localhost:5000/api/bkash/payment/callback',
+                    callbackURL: 'http://localhost:5000/bkash/payment/callback',
                     amount: amount,
                     currency: "BDT",
                     intent: 'sale',
@@ -111,7 +111,7 @@ async function run() {
                 })
                 // console.log("response info", data)
                 return res.status(200).json({ bkashURL: data.bkashURL })
-               
+
             } catch (error) {
                 return res.status(401).json({ error: error.message })
             }
@@ -122,11 +122,15 @@ async function run() {
 
 
         // bkash payment call back
-        app.post('/bkash/payment/callback', getBkashToken, async (req, res) => {
+        app.get('/bkash/payment/callback', getBkashToken, async (req, res) => {
             // console.log("Received request:", req.body);
             const { paymentID, status } = req.query;
 
-           
+            console.log(req.query);
+
+            /* if (status === 'cancel' || status === 'failure') {
+                return res.redirect(`http://localhost:5173/error?message=${status}`)
+            } */
         });
 
 
