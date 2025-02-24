@@ -90,9 +90,9 @@ async function run() {
 
         // bekash payment 
         app.post('/bkash/payment/create', getBkashToken, async (req, res) => {
-            // console.log("Received request:", req.body);
+            console.log("Received request:", req.body);
             const { amount, userId, applicantId } = req.body;
-            // console.log("create", applicantId)
+            console.log("create", applicantId)
             globals.setValue('userId', userId)
             try {
                 const { data } = await axios.post(process.env.bkash_create_payment_url, {
