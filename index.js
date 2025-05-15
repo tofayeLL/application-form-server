@@ -538,9 +538,16 @@ async function run() {
             const result = await applicantCollection.find().toArray();
             res.send(result);
         })
+
         // by use get All payment applicant
         app.get('/payments', async (req, res) => {
             const result = await paymentsCollection.find().toArray();
+            res.send(result);
+        })
+
+        // by use get All  admit card count
+        app.get('/admitCardCounts', async (req, res) => {
+            const result = await downloadAdmitCollection.find().toArray();
             res.send(result);
         })
 
