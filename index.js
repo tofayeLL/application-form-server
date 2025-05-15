@@ -83,6 +83,7 @@ async function run() {
         const userCollection = client.db("application").collection("users");
         const adminCollection = client.db("application").collection("adminAnza");
         const paymentsCollection = client.db("application").collection("payments");
+        const downloadAdmitCollection = client.db("application").collection("downloadAdmit");
 
 
 
@@ -252,6 +253,28 @@ async function run() {
             }
 
         });
+
+
+
+
+        // POST request to icount admit card download dynamically
+        app.post('/downloadAdmitCard/incrementCount', async (req, res) => {
+            try {
+                // Update the single document that stores the global count
+                // Assume there is one document with _id: 'globalDownloadCount'
+                const result = await downloadAdmitCollection.findOneAndUpdate(
+                    { _id: 'admitCardDownloadCount' }, // fixed id or query for the global counter doc
+                    { $inc: { downloadCount: 1 } },
+                    { upsert: true, new: true }
+                );
+
+                res.status(200).json({ message: 'Download count incremented', downloadCount: result.downloadCount });
+            } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Failed to increment download count' });
+            }
+        });
+
 
 
 
@@ -510,13 +533,17 @@ async function run() {
 
 
 
-
-
         // by use get All applicants find
         app.get('/applicants', async (req, res) => {
             const result = await applicantCollection.find().toArray();
             res.send(result);
         })
+        // by use get All payment applicant
+        app.get('/payments', async (req, res) => {
+            const result = await paymentsCollection.find().toArray();
+            res.send(result);
+        })
+
 
         // by using get method to get computer operator APplicant data between all applicants find with postName filter
         app.get('/computerOperator', async (req, res) => {
@@ -530,6 +557,7 @@ async function run() {
         });
 
 
+
         // by using get method to get unpaid applicant data between all applicants find with postName filter
         app.get('/unpaid', async (req, res) => {
             try {
@@ -540,6 +568,7 @@ async function run() {
                 res.status(500).send({ message: "An error occurred while fetching applicants." });
             }
         });
+
 
 
         /* date wise applicant table create get method to get date count for applicant */
@@ -624,6 +653,8 @@ async function run() {
             }
         });
 
+
+
         // Get method to find a single applicant by ID
         app.get('/singleApplicant/:id', async (req, res) => {
             const id = req.params.id;
@@ -647,7 +678,6 @@ async function run() {
                 res.status(500).send({ message: 'Server error' });
             }
         });
-
 
 
 
